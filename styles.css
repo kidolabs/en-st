@@ -1,0 +1,110 @@
+:root {
+  --bg: #fff7ed;
+  --card: #ffffff;
+  --ink: #3b2f2f;
+  --accent: #ff7a59;
+  --accent2: #4dabf7;
+  --shadow: 0 6px 18px rgba(0,0,0,.12);
+  --radius: 20px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* Top bar */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #ffd6a5, #ffadad);
+  box-shadow: var(--shadow);
+}
+.brand { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 1.6rem; }
+.search {
+  flex: 1 1 260px; min-width: 200px;
+  padding: 12px 16px; font-size: 1.1rem;
+  border: 3px solid #fff; border-radius: 999px; outline: none;
+  font-family: 'Nunito', sans-serif; box-shadow: var(--shadow);
+}
+.search:focus { border-color: var(--accent2); }
+.levels { display: flex; gap: 8px; }
+.levels button {
+  padding: 10px 16px; font-size: 1rem; font-weight: 700;
+  border: none; border-radius: 999px; cursor: pointer;
+  background: #fff; color: var(--ink); box-shadow: var(--shadow);
+  font-family: 'Baloo 2', cursive;
+}
+.levels button.active { background: var(--accent); color: #fff; }
+
+/* Grid */
+.grid {
+  display: grid; gap: 20px; padding: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  max-width: 1200px; margin: 0 auto;
+}
+.card {
+  background: var(--card); border-radius: var(--radius);
+  overflow: hidden; cursor: pointer; box-shadow: var(--shadow);
+  transition: transform .15s ease, box-shadow .15s ease;
+  border: 3px solid transparent;
+}
+.card:hover, .card:focus-visible {
+  transform: translateY(-5px) scale(1.02);
+  border-color: var(--accent2); outline: none;
+}
+.card .thumb {
+  width: 100%; aspect-ratio: 16/10; object-fit: cover; background: #ffe8d6; display: block;
+}
+.card .meta { padding: 12px 14px; }
+.card .name { font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1.1rem; line-height: 1.2; }
+.card .count { margin-top: 4px; font-size: .85rem; color: #8a7a7a; }
+.empty { text-align: center; font-size: 1.3rem; padding: 40px; }
+
+/* Player overlay */
+.player {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,.78); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.player[hidden] { display: none; }   /* [hidden] must beat display:flex */
+.player-box {
+  position: relative; display: flex; gap: 0;
+  width: min(1100px, 96vw); max-height: 92vh;
+  background: #fff; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+}
+.close {
+  position: absolute; top: 10px; right: 12px; z-index: 5;
+  width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+  font-size: 1.2rem; background: rgba(0,0,0,.55); color: #fff;
+}
+.stage { flex: 1 1 auto; min-width: 0; background: #000; display: flex; flex-direction: column; }
+.video { width: 100%; flex: 1 1 auto; max-height: 70vh; background: #000; }
+.stage-bar { display: flex; gap: 10px; padding: 12px; background: #1d1d1d; justify-content: center; flex-wrap: wrap; }
+.navbtn, .ccbtn {
+  padding: 10px 16px; border: none; border-radius: 999px; cursor: pointer;
+  font-weight: 700; font-size: 1rem; font-family: 'Baloo 2', cursive;
+  background: #444; color: #fff;
+}
+.navbtn:disabled { opacity: .4; cursor: not-allowed; }
+.ccbtn { background: var(--accent2); }
+.ccbtn[aria-pressed="false"] { background: #444; }
+
+.episodes { flex: 0 0 300px; max-width: 40%; overflow-y: auto; padding: 16px; background: #fff8f2; }
+.ep-title { font-family: 'Baloo 2', cursive; font-size: 1.2rem; margin: 6px 0 12px; }
+.ep-list { list-style: none; margin: 0; padding: 0; counter-reset: ep; }
+.ep-list li {
+  padding: 10px 12px; margin-bottom: 6px; border-radius: 12px; cursor: pointer;
+  background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.06); font-weight: 600; font-size: .95rem;
+}
+.ep-list li:hover { background: #ffe8d6; }
+.ep-list li.active { background: var(--accent); color: #fff; }
+
+@media (max-width: 700px) {
+  .player-box { flex-direction: column; max-height: 94vh; }
+  .episodes { flex: 1 1 auto; max-width: 100%; max-height: 30vh; }
+  .video { max-height: 45vh; }
+}
