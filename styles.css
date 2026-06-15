@@ -77,6 +77,8 @@ body {
 }
 .backbtn:hover { filter: brightness(1.05); }
 .subhead-title { font-family: 'Baloo 2', cursive; font-size: 1.4rem; margin: 0; }
+.subsearch { max-width: 1200px; margin: 0 auto; padding: 14px 24px 0; }
+.subsearch .search { width: 100%; }
 
 /* Episode sub-card title a touch smaller */
 .ep-name { font-size: 1rem; }

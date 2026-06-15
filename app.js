@@ -88,20 +88,31 @@ function renderLevels() {
   }
 }
 
-// ---------- TOPIC: episode sub-cards ----------
+// ---------- TOPIC: episode sub-cards (with in-topic search) ----------
+let curTopic = null;
 function renderTopic(slug) {
   const t = BY_SLUG[slug];
   if (!t) { location.hash = '#/'; return; }
+  curTopic = t;
   $('#topic-title').textContent = `${t.title} · ${t.count} tập`;
+  $('#ep-search').value = '';
+  renderEpisodes('');
+  setBase('topic');
+}
+function renderEpisodes(q) {
+  const t = curTopic;
+  if (!t) return;
+  const ql = (q || '').trim().toLowerCase();
   const grid = $('#ep-grid');
   grid.innerHTML = '';
   t.episodes.forEach((e, i) => {
+    const title = e.title || e.id;               // keep ORIGINAL index i for the player link
+    if (ql && !title.toLowerCase().includes(ql)) return;
     grid.appendChild(makeCard(
-      mediaUrl(t.level, t.slug, e.id, 'jpg'), e.title || e.id,
-      `<div class="name ep-name">${i + 1}. ${escapeHtml(e.title || e.id)}</div>`,
+      mediaUrl(t.level, t.slug, e.id, 'jpg'), title,
+      `<div class="name ep-name">${i + 1}. ${escapeHtml(title)}</div>`,
       () => { location.hash = `#/p/${t.slug}/${i}`; }));
   });
-  setBase('topic');
 }
 
 // ---------- PLAYER ----------
@@ -111,21 +122,8 @@ function renderPlayer(slug, index) {
   renderTopic(slug);              // keep the episode grid rendered underneath the modal
   playing = { slug, index };
   $('#back-topic-name').textContent = t.title;
-  renderRelated(t, index);
   openModal();
   loadEpisode(t, index);
-}
-
-function renderRelated(t, currentIndex) {
-  const grid = $('#related-grid');
-  grid.innerHTML = '';
-  t.episodes.forEach((e, i) => {
-    grid.appendChild(makeCard(
-      mediaUrl(t.level, t.slug, e.id, 'jpg'), e.title || e.id,
-      `<div class="name ep-name">${i + 1}. ${escapeHtml(e.title || e.id)}</div>`,
-      () => loadEpisode(t, i),
-      i === currentIndex));
-  });
 }
 
 function loadEpisode(t, i) {
@@ -147,11 +145,6 @@ function loadEpisode(t, i) {
   $('#now-playing').textContent = `${i + 1}. ${ep.title || ep.id}`;
   $('#prev').disabled = i === 0;
   $('#next').disabled = i === t.episodes.length - 1;
-  // highlight active related card
-  [...$('#related-grid').children].forEach((c, idx) => {
-    c.classList.toggle('active', idx === i);
-    if (idx === i) c.scrollIntoView({ block: 'nearest', inline: 'center' });
-  });
   const want = `#/p/${t.slug}/${i}`;
   if (location.hash !== want) history.replaceState(null, '', want);
 }
@@ -197,6 +190,12 @@ function onEnded() {
   if (loopOn) { const v = $('#video'); v.currentTime = 0; v.play().catch(() => {}); return; }
   if (playing.index < t.episodes.length - 1) loadEpisode(t, playing.index + 1);
 }
+function goFullscreen() {
+  const v = $('#video');
+  if (v.requestFullscreen) v.requestFullscreen();
+  else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();   // iOS Safari (video-only fullscreen)
+  else if (v.webkitRequestFullscreen) v.webkitRequestFullscreen();
+}
 function stopVideo() { const v = $('#video'); v.pause(); v.removeAttribute('src'); v.load(); }
 
 // ---------- router ----------
@@ -212,10 +211,12 @@ function route() {
 // ---------- init ----------
 function init() {
   $('#search').addEventListener('input', (e) => { state.q = e.target.value; renderHome(); });
+  $('#ep-search').addEventListener('input', (e) => renderEpisodes(e.target.value));
   $('#back-home').addEventListener('click', () => { location.hash = '#/'; });
   $('#cc').addEventListener('click', toggleCC);
   $('#capsize').addEventListener('click', cycleCapSize);
   $('#loop').addEventListener('click', toggleLoop);
+  $('#fs').addEventListener('click', goFullscreen);
   $('#prev').addEventListener('click', () => step(-1));
   $('#next').addEventListener('click', () => step(1));
   $('#video').addEventListener('ended', onEnded);

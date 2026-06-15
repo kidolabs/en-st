@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%88%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=6" />
+  <link rel="stylesheet" href="styles.css?v=7" />
 </head>
 <body>
   <header class="topbar">
@@ -29,6 +29,9 @@
         <button class="backbtn" id="back-home">← Tất cả truyện</button>
         <h1 id="topic-title" class="subhead-title"></h1>
       </div>
+      <div class="subsearch">
+        <input id="ep-search" class="search" type="search" placeholder="🔍 Tìm tập trong truyện này..." autocomplete="off" />
+      </div>
       <div id="ep-grid" class="grid"></div>
     </section>
 
@@ -46,16 +49,13 @@
           <button id="cc" class="ccbtn" aria-pressed="false">CC phụ đề: TẮT</button>
           <button id="capsize" class="ccbtn sizebtn" hidden>🔠 Cỡ chữ: Vừa</button>
           <button id="loop" class="ccbtn loopbtn" aria-pressed="false">🔁 Lặp: TẮT</button>
+          <button id="fs" class="navbtn fsbtn">⛶ Phóng to</button>
           <button id="next" class="navbtn">Tập sau ▶</button>
-        </div>
-        <div class="related">
-          <h2 class="related-title">Các tập khác</h2>
-          <div id="related-grid" class="grid"></div>
         </div>
       </div>
     </div>
   </main>
 
-  <script src="app.js?v=6"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
