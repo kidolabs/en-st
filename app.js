@@ -12,7 +12,7 @@ const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 
 let CATALOG = [];
 let BY_SLUG = {};
-let state = { q: '' };
+let state = { level: 'all', q: '' };
 let ccOn = false;            // subtitles OFF by default
 let loopOn = false;
 let capLevel = 0;            // caption size: 0=Vừa, 1=Lớn, 2=Rất lớn
@@ -42,7 +42,24 @@ function closeModal() {
 // ---------- HOME: topic cards ----------
 function visibleTopics() {
   const q = state.q.trim().toLowerCase();
-  return CATALOG.filter((t) => !q || t.title.toLowerCase().includes(q));
+  return CATALOG.filter((t) => {
+    if (state.level !== 'all' && t.level !== Number(state.level)) return false;
+    return !q || t.title.toLowerCase().includes(q);
+  });
+}
+
+function renderLevels() {
+  const wrap = $('#levels');
+  const levels = [...new Set(CATALOG.map((t) => t.level))].sort((a, b) => a - b);
+  const buttons = [['all', 'Tất cả'], ...levels.map((l) => [String(l), `Level ${l}`])];
+  wrap.innerHTML = '';
+  for (const [val, label] of buttons) {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.className = state.level === val ? 'active' : '';
+    b.addEventListener('click', () => { state.level = val; renderLevels(); renderHome(); });
+    wrap.appendChild(b);
+  }
 }
 
 function makeCard(imgUrl, alt, nameHtml, onClick, active) {
@@ -217,6 +234,7 @@ function init() {
     .then((c) => {
       CATALOG = c.topics;
       BY_SLUG = Object.fromEntries(CATALOG.map((t) => [t.slug, t]));
+      renderLevels();
       route();
     })
     .catch((err) => { $('#grid').innerHTML = `<p class="empty">Lỗi tải danh sách 😢<br>${escapeHtml(err.message)}</p>`; });
