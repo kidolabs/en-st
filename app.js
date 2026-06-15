@@ -1,18 +1,46 @@
-// English Stories — kid video library. Vanilla JS, no build step.
-// Media (mp4/vtt/jpg) live on Cloudflare R2; the site is on GitHub Pages.
+// English Stories — kid video library. Vanilla JS, hash-routed 3-level navigation:
+//   #/            → home (topic cards)
+//   #/t/{slug}    → topic page (episode sub-cards, thumbnail per episode)
+//   #/p/{slug}/{i}→ player (video + Trước/Sau + Lặp + related cards, autoplay-next)
+// Media (mp4/vtt/jpg) live on Cloudflare R2; site on GitHub Pages.
 
-// ⬇️ After creating the R2 bucket, set this to its public base URL (no trailing slash).
-//    e.g. 'https://pub-xxxxxxxx.r2.dev'  or a custom domain like 'https://video.example.com'
 const VIDEO_BASE = 'https://pub-0e0f52f13bb14693b0ce66f814b5e91c.r2.dev';
 
 const $ = (s, r = document) => r.querySelector(s);
 const mediaUrl = (level, slug, id, ext) => `${VIDEO_BASE}/media/L${level}/${slug}/${id}.${ext}`;
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 let CATALOG = [];
+let BY_SLUG = {};
 let state = { level: 'all', q: '' };
-let current = { topic: null, index: 0 };
+let ccOn = false;            // subtitles OFF by default
+let loopOn = false;
+let capLevel = 0;            // caption size: 0=Vừa, 1=Lớn, 2=Rất lớn
+const CAP_SIZES = [
+  { cls: '', label: 'Vừa' },
+  { cls: 'cap-lg', label: 'Lớn' },
+  { cls: 'cap-xl', label: 'Rất lớn' },
+];
+let playing = { slug: null, index: 0 };
 
-// ---------- Grid ----------
+// Base view = 'home' or 'topic' (mutually exclusive). The player is a modal overlay on top.
+function setBase(name) {
+  $('#home-view').hidden = name !== 'home';
+  $('#topic-view').hidden = name !== 'topic';
+  $('#search').style.display = name === 'home' ? '' : 'none';
+  $('#levels').style.display = name === 'home' ? '' : 'none';
+}
+function openModal() {
+  $('#player-view').hidden = false;
+  document.body.classList.add('modal-open');
+}
+function closeModal() {
+  $('#player-view').hidden = true;
+  document.body.classList.remove('modal-open');
+  stopVideo();
+}
+
+// ---------- HOME: topic cards ----------
 function visibleTopics() {
   const q = state.q.trim().toLowerCase();
   return CATALOG.filter((t) => {
@@ -22,24 +50,26 @@ function visibleTopics() {
   });
 }
 
-function renderGrid() {
+function makeCard(imgUrl, alt, nameHtml, onClick, active) {
+  const card = document.createElement('button');
+  card.className = 'card' + (active ? ' active' : '');
+  card.type = 'button';
+  card.innerHTML = `
+    <img class="thumb" loading="lazy" alt="${escapeHtml(alt)}" src="${imgUrl}" onerror="this.style.visibility='hidden'">
+    <div class="meta">${nameHtml}</div>`;
+  card.addEventListener('click', onClick);
+  return card;
+}
+
+function renderHome() {
   const grid = $('#grid');
   const list = visibleTopics();
   grid.innerHTML = '';
   for (const t of list) {
-    const card = document.createElement('button');
-    card.className = 'card';
-    card.type = 'button';
-    card.innerHTML = `
-      <img class="thumb" loading="lazy" alt="${escapeHtml(t.title)}"
-           src="${mediaUrl(t.level, t.slug, t.thumb, 'jpg')}"
-           onerror="this.style.visibility='hidden'">
-      <div class="meta">
-        <div class="name">${escapeHtml(t.title)}</div>
-        <div class="count">${t.count} tập · Level ${t.level}</div>
-      </div>`;
-    card.addEventListener('click', () => openPlayer(t, 0));
-    grid.appendChild(card);
+    grid.appendChild(makeCard(
+      mediaUrl(t.level, t.slug, t.thumb, 'jpg'), t.title,
+      `<div class="name">${escapeHtml(t.title)}</div><div class="count">${t.count} tập · Level ${t.level}</div>`,
+      () => { location.hash = `#/t/${t.slug}`; }));
   }
   $('#empty').hidden = list.length > 0;
 }
@@ -53,109 +83,160 @@ function renderLevels() {
     const b = document.createElement('button');
     b.textContent = label;
     b.className = state.level === val ? 'active' : '';
-    b.addEventListener('click', () => {
-      state.level = val;
-      renderLevels();
-      renderGrid();
-    });
+    b.addEventListener('click', () => { state.level = val; renderLevels(); renderHome(); });
     wrap.appendChild(b);
   }
 }
 
-// ---------- Player ----------
-function openPlayer(topic, index) {
-  current = { topic, index };
-  $('#ep-title').textContent = topic.title;
-  const ol = $('#ep-list');
-  ol.innerHTML = '';
-  topic.episodes.forEach((e, i) => {
-    const li = document.createElement('li');
-    li.textContent = `${i + 1}. ${e.title || e.id}`;
-    li.addEventListener('click', () => loadEpisode(i));
-    ol.appendChild(li);
+// ---------- TOPIC: episode sub-cards ----------
+function renderTopic(slug) {
+  const t = BY_SLUG[slug];
+  if (!t) { location.hash = '#/'; return; }
+  $('#topic-title').textContent = `${t.title} · ${t.count} tập`;
+  const grid = $('#ep-grid');
+  grid.innerHTML = '';
+  t.episodes.forEach((e, i) => {
+    grid.appendChild(makeCard(
+      mediaUrl(t.level, t.slug, e.id, 'jpg'), e.title || e.id,
+      `<div class="name ep-name">${i + 1}. ${escapeHtml(e.title || e.id)}</div>`,
+      () => { location.hash = `#/p/${t.slug}/${i}`; }));
   });
-  $('#player').hidden = false;
-  document.body.style.overflow = 'hidden';
-  loadEpisode(index);
+  setBase('topic');
 }
 
-function loadEpisode(i) {
-  const { topic } = current;
-  current.index = i;
-  const ep = topic.episodes[i];
+// ---------- PLAYER ----------
+function renderPlayer(slug, index) {
+  const t = BY_SLUG[slug];
+  if (!t || !t.episodes[index]) { location.hash = '#/'; return; }
+  renderTopic(slug);              // keep the episode grid rendered underneath the modal
+  playing = { slug, index };
+  $('#back-topic-name').textContent = t.title;
+  renderRelated(t, index);
+  openModal();
+  loadEpisode(t, index);
+}
+
+function renderRelated(t, currentIndex) {
+  const grid = $('#related-grid');
+  grid.innerHTML = '';
+  t.episodes.forEach((e, i) => {
+    grid.appendChild(makeCard(
+      mediaUrl(t.level, t.slug, e.id, 'jpg'), e.title || e.id,
+      `<div class="name ep-name">${i + 1}. ${escapeHtml(e.title || e.id)}</div>`,
+      () => loadEpisode(t, i),
+      i === currentIndex));
+  });
+}
+
+function loadEpisode(t, i) {
+  playing = { slug: t.slug, index: i };
+  const ep = t.episodes[i];
   const video = $('#video');
   video.innerHTML = '';
-  video.src = mediaUrl(topic.level, topic.slug, ep.id, 'mp4');
+  video.src = mediaUrl(t.level, t.slug, ep.id, 'mp4');
 
   const track = document.createElement('track');
-  track.kind = 'captions';
-  track.label = 'English';
-  track.srclang = 'en';
-  track.src = mediaUrl(topic.level, topic.slug, ep.id, 'vtt'); // VTT on R2 too (self-contained media)
-  track.default = true;
+  track.kind = 'captions'; track.label = 'English'; track.srclang = 'en';
+  track.src = mediaUrl(t.level, t.slug, ep.id, 'vtt'); track.default = true;
   video.appendChild(track);
 
   video.load();
   video.play().catch(() => {});
-  // apply current CC preference once the track is ready
   video.addEventListener('loadeddata', applyCC, { once: true });
 
-  // highlight + nav state
-  [...$('#ep-list').children].forEach((li, idx) => li.classList.toggle('active', idx === i));
+  $('#now-playing').textContent = `${i + 1}. ${ep.title || ep.id}`;
   $('#prev').disabled = i === 0;
-  $('#next').disabled = i === topic.episodes.length - 1;
-  const active = $('#ep-list').children[i];
-  if (active) active.scrollIntoView({ block: 'nearest' });
+  $('#next').disabled = i === t.episodes.length - 1;
+  // highlight active related card
+  [...$('#related-grid').children].forEach((c, idx) => {
+    c.classList.toggle('active', idx === i);
+    if (idx === i) c.scrollIntoView({ block: 'nearest', inline: 'center' });
+  });
+  const want = `#/p/${t.slug}/${i}`;
+  if (location.hash !== want) history.replaceState(null, '', want);
 }
 
-let ccOn = true;
 function applyCC() {
-  const tracks = $('#video').textTracks;
-  if (tracks && tracks[0]) tracks[0].mode = ccOn ? 'showing' : 'hidden';
+  const tt = $('#video').textTracks;
+  if (tt && tt[0]) tt[0].mode = ccOn ? 'showing' : 'hidden';
 }
 function toggleCC() {
   ccOn = !ccOn;
-  const btn = $('#cc');
-  btn.setAttribute('aria-pressed', String(ccOn));
-  btn.textContent = ccOn ? 'CC phụ đề: BẬT' : 'CC phụ đề: TẮT';
+  const b = $('#cc');
+  b.setAttribute('aria-pressed', String(ccOn));
+  b.textContent = ccOn ? 'CC phụ đề: BẬT' : 'CC phụ đề: TẮT';
+  $('#capsize').hidden = !ccOn;     // size button only relevant when captions on
   applyCC();
 }
-
-function closePlayer() {
+function applyCapSize() {
   const v = $('#video');
-  v.pause();
-  v.removeAttribute('src');
-  v.load();
-  $('#player').hidden = true;
-  document.body.style.overflow = '';
+  v.classList.remove('cap-lg', 'cap-xl');
+  if (CAP_SIZES[capLevel].cls) v.classList.add(CAP_SIZES[capLevel].cls);
+  $('#capsize').textContent = `🔠 Cỡ chữ: ${CAP_SIZES[capLevel].label}`;
+}
+function cycleCapSize() {
+  capLevel = (capLevel + 1) % CAP_SIZES.length;
+  applyCapSize();
+}
+function toggleLoop() {
+  loopOn = !loopOn;
+  const b = $('#loop');
+  b.setAttribute('aria-pressed', String(loopOn));
+  b.textContent = loopOn ? '🔁 Lặp: BẬT' : '🔁 Lặp: TẮT';
+}
+function step(delta) {
+  const t = BY_SLUG[playing.slug];
+  const ni = Math.min(t.episodes.length - 1, Math.max(0, playing.index + delta));
+  if (ni !== playing.index) loadEpisode(t, ni);
+}
+// On end: loop same episode, else auto-play next within the SAME topic.
+function onEnded() {
+  if ($('#player-view').hidden) return;
+  const t = BY_SLUG[playing.slug];
+  if (!t) return;
+  if (loopOn) { const v = $('#video'); v.currentTime = 0; v.play().catch(() => {}); return; }
+  if (playing.index < t.episodes.length - 1) loadEpisode(t, playing.index + 1);
+}
+function stopVideo() { const v = $('#video'); v.pause(); v.removeAttribute('src'); v.load(); }
+
+// ---------- router ----------
+function route() {
+  const h = location.hash || '#/';
+  const m = h.match(/^#\/(t|p)\/([^/]+)(?:\/(\d+))?/);
+  if (!m) { closeModal(); setBase('home'); renderHome(); window.scrollTo(0, 0); return; }
+  const [, kind, slug, idx] = m;
+  if (kind === 't') { closeModal(); renderTopic(decodeURIComponent(slug)); window.scrollTo(0, 0); }
+  else renderPlayer(decodeURIComponent(slug), Number(idx || 0));
 }
 
-// ---------- helpers ----------
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
-// ---------- wire up ----------
+// ---------- init ----------
 function init() {
-  $('#search').addEventListener('input', (e) => { state.q = e.target.value; renderGrid(); });
-  $('#close').addEventListener('click', closePlayer);
+  $('#search').addEventListener('input', (e) => { state.q = e.target.value; renderHome(); });
+  $('#back-home').addEventListener('click', () => { location.hash = '#/'; });
   $('#cc').addEventListener('click', toggleCC);
-  $('#prev').addEventListener('click', () => loadEpisode(Math.max(0, current.index - 1)));
-  $('#next').addEventListener('click', () => loadEpisode(Math.min(current.topic.episodes.length - 1, current.index + 1)));
+  $('#capsize').addEventListener('click', cycleCapSize);
+  $('#loop').addEventListener('click', toggleLoop);
+  $('#prev').addEventListener('click', () => step(-1));
+  $('#next').addEventListener('click', () => step(1));
+  $('#video').addEventListener('ended', onEnded);
+  const dismiss = () => { location.hash = playing.slug ? `#/t/${playing.slug}` : '#/'; };
+  $('#close-modal').addEventListener('click', dismiss);
+  $('#player-view').addEventListener('click', (e) => { if (e.target.id === 'player-view') dismiss(); });
   document.addEventListener('keydown', (e) => {
-    if ($('#player').hidden) return;
-    if (e.key === 'Escape') closePlayer();
-    if (e.key === 'ArrowRight') $('#next').click();
-    if (e.key === 'ArrowLeft') $('#prev').click();
+    if ($('#player-view').hidden) return;
+    if (e.key === 'Escape') dismiss();
+    if (e.key === 'ArrowRight') step(1);
+    if (e.key === 'ArrowLeft') step(-1);
   });
-  $('#player').addEventListener('click', (e) => { if (e.target.id === 'player') closePlayer(); });
+  window.addEventListener('hashchange', route);
 
   fetch('data/catalog.json')
     .then((r) => r.json())
     .then((c) => {
       CATALOG = c.topics;
+      BY_SLUG = Object.fromEntries(CATALOG.map((t) => [t.slug, t]));
       renderLevels();
-      renderGrid();
+      route();
     })
     .catch((err) => { $('#grid').innerHTML = `<p class="empty">Lỗi tải danh sách 😢<br>${escapeHtml(err.message)}</p>`; });
 }
