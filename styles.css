@@ -125,6 +125,57 @@ body.modal-open { overflow: hidden; }
 .video.cap-lg::cue { font-size: 1.6em; }
 .video.cap-xl::cue { font-size: 2.3em; }
 
+/* ---- Audio: listening feature ---- */
+.audio-launch {
+  flex: 0 0 auto; padding: 11px 18px; border: none; border-radius: 999px; cursor: pointer;
+  font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1rem;
+  background: #845ef7; color: #fff; box-shadow: var(--shadow);
+}
+.audio-launch:hover { filter: brightness(1.08); }
+.listen-topic { background: #845ef7; margin-left: auto; }
+
+.audio-box { width: min(720px, 96vw); }
+.audio-top { padding: 14px 16px 8px; display: flex; flex-direction: column; gap: 10px; flex: 0 0 auto; }
+.audio-top .search { width: 100%; }
+.audio-top-btns { display: flex; gap: 10px; }
+.audio-top-btns .navbtn { background: #845ef7; color: #fff; }
+.audio-count { font-size: .9rem; color: #8a7a7a; font-weight: 700; }
+
+.audio-list { list-style: none; margin: 0; padding: 0 10px 14px; overflow-y: auto; flex: 1 1 auto; }
+.audio-item {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin: 6px 0;
+  background: #fff; border-radius: 14px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.06);
+}
+.audio-item:hover { background: #f3eaff; }
+.ai-num { flex: 0 0 28px; text-align: center; font-weight: 800; color: #845ef7; font-family: 'Baloo 2', cursive; }
+.ai-text { flex: 1; font-size: .95rem; line-height: 1.25; }
+.ai-text b { font-family: 'Baloo 2', cursive; }
+.ai-play { flex: 0 0 auto; font-size: 1.2rem; color: #845ef7; }
+
+/* Persistent bottom audio bar */
+.audio-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+  display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+  background: #2b2440; color: #fff; box-shadow: 0 -4px 16px rgba(0,0,0,.25);
+}
+.audio-bar[hidden] { display: none; }
+.ab-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.ab-emoji { font-size: 1.3rem; flex: 0 0 auto; }
+.ab-title { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ab-controls { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.ab-btn {
+  width: 42px; height: 42px; border-radius: 50%; border: none; cursor: pointer;
+  font-size: 1.1rem; background: #4a3f6b; color: #fff;
+}
+.ab-btn:hover { background: #5d4f88; }
+.ab-play { background: #845ef7; }
+.ab-btn.ab-on { background: #69db7c; color: #14532d; }
+
+@media (max-width: 700px) {
+  .ab-btn { width: 38px; height: 38px; font-size: 1rem; }
+  .audio-launch { padding: 9px 12px; font-size: .9rem; }
+}
+
 /* Related episodes grid (scrolls inside the modal) */
 .related { flex: 1 1 auto; overflow-y: auto; padding: 10px 18px 18px; border-top: 2px solid #ffe0c2; }
 .related-title { font-family: 'Baloo 2', cursive; font-size: 1.2rem; margin: 4px 0 10px; }

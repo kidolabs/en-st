@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%88%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=10" />
+  <link rel="stylesheet" href="styles.css?v=11" />
 </head>
 <body>
   <header class="topbar">
@@ -28,6 +28,7 @@
       <div class="subhead">
         <button class="backbtn" id="back-home">← Tất cả truyện</button>
         <h1 id="topic-title" class="subhead-title"></h1>
+        <button class="backbtn listen-topic" id="listen-topic">🎧 Nghe truyện này</button>
       </div>
       <div class="subsearch">
         <input id="ep-search" class="search" type="search" placeholder="🔍 Tìm tập trong truyện này..." autocomplete="off" />
@@ -54,8 +55,43 @@
         </div>
       </div>
     </div>
+
+    <!-- AUDIO: pick & listen modal -->
+    <div id="audio-modal" class="modal" hidden>
+      <div class="modal-box audio-box">
+        <div class="modal-head">
+          <span id="audio-modal-title" class="modal-title">🎧 Nghe MP3</span>
+          <button class="closebtn" id="close-audio" aria-label="Đóng">✕</button>
+        </div>
+        <div class="audio-top">
+          <input id="audio-search" class="search" type="search" placeholder="🔍 Tìm tập..." autocomplete="off" />
+          <div class="audio-top-btns">
+            <button id="play-all" class="navbtn">▶️ Phát tất cả</button>
+            <button id="shuffle-all" class="navbtn">🔀 Xáo trộn</button>
+          </div>
+          <div id="audio-count" class="audio-count"></div>
+        </div>
+        <ol id="audio-list" class="audio-list"></ol>
+      </div>
+    </div>
   </main>
 
-  <script src="app.js?v=10"></script>
+  <!-- Persistent audio player bar (keeps playing while browsing / screen off) -->
+  <div id="audio-bar" class="audio-bar" hidden>
+    <div class="ab-info">
+      <span class="ab-emoji">🎧</span>
+      <span id="ab-title" class="ab-title">—</span>
+    </div>
+    <div class="ab-controls">
+      <button id="ab-prev" class="ab-btn" aria-label="Bài trước">⏮</button>
+      <button id="ab-play" class="ab-btn ab-play" aria-label="Phát/Dừng">⏸</button>
+      <button id="ab-next" class="ab-btn" aria-label="Bài sau">⏭</button>
+      <button id="ab-loop" class="ab-btn ab-on" aria-pressed="true" aria-label="Lặp tất cả">🔁</button>
+      <button id="ab-stop" class="ab-btn" aria-label="Tắt">✕</button>
+    </div>
+  </div>
+  <audio id="audio" preload="none"></audio>
+
+  <script src="app.js?v=11"></script>
 </body>
 </html>

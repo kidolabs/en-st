@@ -196,6 +196,108 @@ function goFullscreen() {
 }
 function stopVideo() { const v = $('#video'); v.pause(); v.removeAttribute('src'); v.load(); }
 
+// ---------- AUDIO: passive-listening player (MP3), scoped to ONE story ----------
+let audioSource = [];      // episodes of the story currently opened for listening
+let aQueue = [];           // current playlist
+let aIndex = 0;
+let aLoop = true;          // loop whole queue (all-day immersion)
+let audioCurrentList = []; // currently filtered list in the picker
+
+function topicQueue(t) {
+  return t.episodes.map((e) => ({ level: t.level, slug: t.slug, id: e.id, title: e.title || e.id, story: t.title }));
+}
+function audioFiltered(q) {
+  const ql = (q || '').trim().toLowerCase();
+  if (!ql) return audioSource;
+  return audioSource.filter((e) => e.title.toLowerCase().includes(ql));
+}
+function renderAudioList(q) {
+  const list = audioFiltered(q);
+  audioCurrentList = list;
+  $('#audio-count').textContent = `${list.length} tập`;
+  const ol = $('#audio-list');
+  const frag = document.createDocumentFragment();
+  list.forEach((e, i) => {
+    const li = document.createElement('li');
+    li.className = 'audio-item';
+    li.innerHTML = `<span class="ai-num">${i + 1}</span><span class="ai-text">${escapeHtml(e.title)}</span><span class="ai-play">▶</span>`;
+    li.addEventListener('click', () => playQueue(list, i));
+    frag.appendChild(li);
+  });
+  ol.innerHTML = '';
+  ol.appendChild(frag);
+}
+function openAudioModal(t) {
+  if (!t) return;
+  audioSource = topicQueue(t);
+  $('#audio-modal-title').textContent = `🎧 Nghe: ${t.title}`;
+  $('#audio-search').value = '';
+  renderAudioList('');
+  $('#audio-modal').hidden = false;
+  document.body.classList.add('modal-open');
+}
+function closeAudioModal() {
+  $('#audio-modal').hidden = true;
+  if ($('#player-view').hidden) document.body.classList.remove('modal-open');
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function playQueue(list, startIdx) {
+  if (!list || !list.length) return;
+  aQueue = list.slice();
+  aIndex = Math.max(0, startIdx | 0);
+  $('#audio-bar').hidden = false;
+  closeAudioModal();
+  audioPlayAt(aIndex);
+}
+function audioPlayAt(i) {
+  if (!aQueue.length) return;
+  if (i < 0) i = aLoop ? aQueue.length - 1 : 0;
+  if (i >= aQueue.length) { if (aLoop) i = 0; else { $('#ab-play').textContent = '▶️'; return; } }
+  aIndex = i;
+  const ep = aQueue[i];
+  const audio = $('#audio');
+  audio.src = mediaUrl(ep.level, ep.slug, ep.id, 'mp3');
+  audio.play().catch(() => {});
+  $('#ab-title').textContent = `${ep.story} — ${ep.title}`;
+  $('#ab-play').textContent = '⏸';
+  setMediaSession(ep);
+}
+function audioNext() { audioPlayAt(aIndex + 1); }
+function audioPrev() { audioPlayAt(aIndex - 1); }
+function audioTogglePlay() {
+  const audio = $('#audio');
+  if (!audio.src) return;
+  if (audio.paused) audio.play().catch(() => {}); else audio.pause();
+}
+function audioStop() {
+  const audio = $('#audio');
+  audio.pause(); audio.removeAttribute('src'); audio.load();
+  $('#audio-bar').hidden = true;
+}
+function toggleAudioLoop() {
+  aLoop = !aLoop;
+  const b = $('#ab-loop');
+  b.setAttribute('aria-pressed', String(aLoop));
+  b.classList.toggle('ab-on', aLoop);
+}
+function setMediaSession(ep) {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: ep.title, artist: ep.story, album: 'English Stories',
+      artwork: [{ src: mediaUrl(ep.level, ep.slug, ep.id, 'jpg'), sizes: '512x512', type: 'image/jpeg' }],
+    });
+    navigator.mediaSession.setActionHandler('previoustrack', audioPrev);
+    navigator.mediaSession.setActionHandler('nexttrack', audioNext);
+    navigator.mediaSession.setActionHandler('play', audioTogglePlay);
+    navigator.mediaSession.setActionHandler('pause', audioTogglePlay);
+  } catch {}
+}
+
 // ---------- router ----------
 function route() {
   const h = location.hash || '#/';
@@ -228,6 +330,22 @@ function init() {
     if (e.key === 'ArrowLeft') step(-1);
   });
   window.addEventListener('hashchange', route);
+
+  // audio (listening) controls — opened from inside a story
+  $('#listen-topic').addEventListener('click', () => openAudioModal(curTopic));
+  $('#close-audio').addEventListener('click', closeAudioModal);
+  $('#audio-modal').addEventListener('click', (e) => { if (e.target.id === 'audio-modal') closeAudioModal(); });
+  $('#audio-search').addEventListener('input', (e) => renderAudioList(e.target.value));
+  $('#play-all').addEventListener('click', () => playQueue(audioCurrentList, 0));
+  $('#shuffle-all').addEventListener('click', () => playQueue(shuffle(audioCurrentList), 0));
+  $('#ab-prev').addEventListener('click', audioPrev);
+  $('#ab-next').addEventListener('click', audioNext);
+  $('#ab-play').addEventListener('click', audioTogglePlay);
+  $('#ab-loop').addEventListener('click', toggleAudioLoop);
+  $('#ab-stop').addEventListener('click', audioStop);
+  $('#audio').addEventListener('ended', audioNext);
+  $('#audio').addEventListener('play', () => { $('#ab-play').textContent = '⏸'; });
+  $('#audio').addEventListener('pause', () => { $('#ab-play').textContent = '▶️'; });
 
   fetch('data/catalog.json')
     .then((r) => r.json())
