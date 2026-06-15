@@ -12,7 +12,7 @@ const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 
 let CATALOG = [];
 let BY_SLUG = {};
-let state = { level: 'all', q: '' };
+let state = { level: '1', q: '' };   // default view = Level 1
 let ccOn = false;            // subtitles OFF by default
 let loopOn = false;
 let capLevel = 0;            // caption size: 0=Vừa, 1=Lớn, 2=Rất lớn
