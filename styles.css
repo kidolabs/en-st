@@ -199,6 +199,38 @@ body.modal-open { overflow: hidden; }
 .gate-btn:hover { filter: brightness(1.05); }
 .gate-err { color: #e03131; font-weight: 700; margin: 12px 0 0; }
 
+/* ---- Home tabs (Level / Roadmap / Advice) ---- */
+#grid[hidden], #levels[hidden] { display: none !important; }
+.home-tabs { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; padding: 16px 24px 0; }
+.home-tab {
+  padding: 10px 16px; border: none; border-radius: 999px; cursor: pointer;
+  font-family: 'Baloo 2', cursive; font-weight: 700; font-size: 1rem;
+  background: #fff; color: var(--ink); box-shadow: var(--shadow);
+}
+.home-tab.active { background: var(--accent2); color: #fff; }
+.advice-tab { background: #ffd43b; color: #5a3a2a; margin-left: auto; }
+
+/* ---- Roadmap view ---- */
+.road { max-width: 1200px; margin: 0 auto; padding: 8px 24px 40px; }
+.road-stage { margin-top: 22px; }
+.road-title { font-family: 'Baloo 2', cursive; font-size: 1.4rem; margin: 6px 0 2px; color: var(--accent); }
+.road-desc { margin: 0 0 12px; color: #6b5b5b; }
+.road .grid { padding: 0; }
+
+/* ---- Advice modal ---- */
+.advice-box { width: min(680px, 96vw); }
+.advice-body { overflow-y: auto; padding: 16px 22px 24px; flex: 1 1 auto; line-height: 1.5; }
+.advice-body h3 { font-family: 'Baloo 2', cursive; margin: 18px 0 8px; }
+.adv-lead { font-size: 1.02rem; }
+.adv-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.adv-flow span { background: #f3eaff; border-radius: 10px; padding: 6px 10px; font-weight: 700; font-size: .9rem; }
+.adv-flow small { color: #845ef7; font-weight: 700; }
+.adv-flow i { color: #845ef7; font-style: normal; font-weight: 800; }
+.adv-note { background: #fff8e1; border-left: 4px solid #ffd43b; padding: 8px 12px; border-radius: 8px; margin: 10px 0; }
+.adv-stages, .adv-rhythm { padding-left: 20px; }
+.adv-stages li, .adv-rhythm li { margin-bottom: 8px; }
+.adv-foot { margin-top: 14px; font-style: italic; color: #6b5b5b; }
+
 @media (max-width: 700px) {
   .ab-btn { width: 38px; height: 38px; font-size: 1rem; }
   .audio-launch { padding: 9px 12px; font-size: .9rem; }

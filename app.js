@@ -298,11 +298,65 @@ function setMediaSession(ep) {
   } catch {}
 }
 
+// ---------- ROADMAP view (curated learning path) ----------
+const ROADMAP = [
+  { title: '1. Khởi động & tắm ngôn ngữ', desc: 'Nghe nhiều + truyện ngắn dễ nhất, xem lại nhiều lần. Phụ đề TẮT.',
+    slugs: ['hello-cupcake', 'my-first-readers-1', 'who-am-i', 'where-am-i', 'the-blobs', 'dino-buddies'] },
+  { title: '2. Nền chữ & vần', desc: 'Nhận mặt chữ cái và nhóm vần (tiền phonics).',
+    slugs: ['abc-book', 'word-families', 'letter-teams'] },
+  { title: '3. Phonics — tập đánh vần', desc: 'Đánh vần để bắt đầu tự đọc. Lúc này BẬT phụ đề cỡ lớn.',
+    slugs: ['phonics-i', 'phonics-ii'] },
+  { title: '4. Đọc trôi chảy — Readers', desc: 'Bộ readers tăng dần độ khó.',
+    slugs: ['my-first-readers-1', 'my-first-readers-2', 'my-first-readers-3', 'bird-and-kip', 'sam-and-lucky', 'south-street-school'] },
+  { title: '5. Truyện cổ tích', desc: 'Cổ tích kinh điển — vừa học vừa mê.',
+    slugs: ['cinderella', 'snow-white-and-the-seven-dwarfs', 'rapunzel', 'beauty-and-the-beast', 'jack-and-the-beanstalk', 'puss-in-boots', 'the-velveteen-rabbit'] },
+];
+
+function renderRoadmap() {
+  const road = $('#road');
+  road.innerHTML = '';
+  for (const stage of ROADMAP) {
+    const sec = document.createElement('div');
+    sec.className = 'road-stage';
+    sec.innerHTML = `<h2 class="road-title">${escapeHtml(stage.title)}</h2><p class="road-desc">${escapeHtml(stage.desc)}</p>`;
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    for (const slug of stage.slugs) {
+      const t = BY_SLUG[slug];
+      if (!t) continue;
+      grid.appendChild(makeCard(
+        mediaUrl(t.level, t.slug, t.thumb, 'jpg'), t.title,
+        `<div class="name">${escapeHtml(t.title)}</div><div class="count">${t.count} tập · Level ${t.level}</div>`,
+        () => { location.hash = `#/t/${t.slug}`; }));
+    }
+    sec.appendChild(grid);
+    road.appendChild(sec);
+  }
+}
+
+let homeMode = 'level';
+function setHomeMode(mode) {
+  homeMode = mode;
+  const lvl = mode === 'level';
+  $('#tab-level').classList.toggle('active', lvl);
+  $('#tab-road').classList.toggle('active', !lvl);
+  $('#levels').hidden = !lvl;
+  $('#grid').hidden = !lvl;
+  $('#road').hidden = lvl;
+  if (lvl) renderHome(); else { $('#empty').hidden = true; renderRoadmap(); }
+}
+
+function openAdvice() { $('#advice-modal').hidden = false; document.body.classList.add('modal-open'); }
+function closeAdvice() {
+  $('#advice-modal').hidden = true;
+  if ($('#player-view').hidden && $('#audio-modal').hidden) document.body.classList.remove('modal-open');
+}
+
 // ---------- router ----------
 function route() {
   const h = location.hash || '#/';
   const m = h.match(/^#\/(t|p)\/([^/]+)(?:\/(\d+))?/);
-  if (!m) { closeModal(); setBase('home'); renderHome(); window.scrollTo(0, 0); return; }
+  if (!m) { closeModal(); setBase('home'); setHomeMode(homeMode); window.scrollTo(0, 0); return; }
   const [, kind, slug, idx] = m;
   if (kind === 't') { closeModal(); renderTopic(decodeURIComponent(slug)); window.scrollTo(0, 0); }
   else renderPlayer(decodeURIComponent(slug), Number(idx || 0));
@@ -330,8 +384,13 @@ function setupGate() {
 // ---------- init ----------
 function init() {
   setupGate();
-  $('#search').addEventListener('input', (e) => { state.q = e.target.value; renderHome(); });
+  $('#search').addEventListener('input', (e) => { state.q = e.target.value; if (homeMode !== 'level') setHomeMode('level'); else renderHome(); });
   $('#ep-search').addEventListener('input', (e) => renderEpisodes(e.target.value));
+  $('#tab-level').addEventListener('click', () => setHomeMode('level'));
+  $('#tab-road').addEventListener('click', () => setHomeMode('road'));
+  $('#open-advice').addEventListener('click', openAdvice);
+  $('#close-advice').addEventListener('click', closeAdvice);
+  $('#advice-modal').addEventListener('click', (e) => { if (e.target.id === 'advice-modal') closeAdvice(); });
   $('#back-home').addEventListener('click', () => { location.hash = '#/'; });
   $('#cc').addEventListener('click', toggleCC);
   $('#capsize').addEventListener('click', cycleCapSize);
