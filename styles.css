@@ -136,7 +136,7 @@ body.modal-open { overflow: hidden; }
 
 .audio-box { width: min(720px, 96vw); }
 .audio-top { padding: 14px 16px 8px; display: flex; flex-direction: column; gap: 10px; flex: 0 0 auto; }
-.audio-top .search { width: 100%; }
+.audio-top .search { width: 100%; flex: 0 0 auto; }   /* don't grow vertically in the column */
 .audio-top-btns { display: flex; gap: 10px; }
 .audio-top-btns .navbtn { background: #845ef7; color: #fff; }
 .audio-count { font-size: .9rem; color: #8a7a7a; font-weight: 700; }
