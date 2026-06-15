@@ -353,6 +353,10 @@ function init() {
 
   // audio (listening) controls — opened from inside a story
   $('#listen-topic').addEventListener('click', () => openAudioModal(curTopic));
+  $('#listen-from-player').addEventListener('click', () => {   // quick switch from video → listen
+    $('#video').pause();
+    openAudioModal(BY_SLUG[playing.slug]);
+  });
   $('#close-audio').addEventListener('click', closeAudioModal);
   $('#audio-modal').addEventListener('click', (e) => { if (e.target.id === 'audio-modal') closeAudioModal(); });
   $('#audio-search').addEventListener('input', (e) => renderAudioList(e.target.value));

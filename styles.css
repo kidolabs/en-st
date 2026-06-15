@@ -119,6 +119,7 @@ body.modal-open { overflow: hidden; }
 .ccbtn[aria-pressed="false"] { background: #c9c9c9; color: #555; }
 .loopbtn[aria-pressed="true"] { background: #69db7c; color: #14532d; }
 .sizebtn { background: #ffd43b; color: #5a3a2a; }
+.audiobtn { background: #845ef7; color: #fff; }
 
 /* Caption size (native ::cue) — bigger text for kids */
 .video::cue { background: rgba(0,0,0,.72); color: #fff; line-height: 1.3; }
