@@ -171,6 +171,33 @@ body.modal-open { overflow: hidden; }
 .ab-play { background: #845ef7; }
 .ab-btn.ab-on { background: #69db7c; color: #14532d; }
 
+/* ---- Access gate ---- */
+.gate {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: linear-gradient(135deg, #ffd6a5, #ffadad);
+}
+.gate[hidden] { display: none; }
+.gate-box {
+  background: #fff; border-radius: 24px; padding: 34px 28px; text-align: center;
+  box-shadow: var(--shadow); max-width: 360px; width: 100%;
+}
+.gate-emoji { font-size: 3rem; line-height: 1; }
+.gate-title { font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 1.8rem; margin: 8px 0 2px; }
+.gate-sub { color: #8a7a7a; margin: 0 0 18px; }
+.gate-input {
+  width: 100%; box-sizing: border-box; padding: 14px; font-size: 1.4rem; text-align: center;
+  letter-spacing: 6px; border: 3px solid #ffd6a5; border-radius: 14px; outline: none;
+  font-family: 'Nunito', sans-serif;
+}
+.gate-input:focus { border-color: var(--accent2); }
+.gate-btn {
+  margin-top: 14px; width: 100%; padding: 14px; cursor: pointer; border: none; border-radius: 14px;
+  font-family: 'Baloo 2', cursive; font-weight: 800; font-size: 1.2rem; background: var(--accent); color: #fff;
+}
+.gate-btn:hover { filter: brightness(1.05); }
+.gate-err { color: #e03131; font-weight: 700; margin: 12px 0 0; }
+
 @media (max-width: 700px) {
   .ab-btn { width: 38px; height: 38px; font-size: 1rem; }
   .audio-launch { padding: 9px 12px; font-size: .9rem; }

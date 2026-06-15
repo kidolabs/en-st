@@ -7,9 +7,21 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%88%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
 </head>
 <body>
+  <!-- Access gate (casual privacy, not real security) -->
+  <div id="gate" class="gate">
+    <form class="gate-box" id="gate-form">
+      <div class="gate-emoji">🎈🔒</div>
+      <div class="gate-title">English Stories</div>
+      <p class="gate-sub">Nhập mật khẩu để vào học nhé</p>
+      <input id="gate-input" class="gate-input" type="password" inputmode="numeric" autocomplete="off" placeholder="• • • • • •" />
+      <button type="submit" class="gate-btn">Vào học 🚀</button>
+      <p id="gate-err" class="gate-err" hidden>Sai mật khẩu, thử lại nhé! 🙈</p>
+    </form>
+  </div>
+
   <header class="topbar">
     <div class="brand">🎈 English Stories</div>
     <input id="search" class="search" type="search" placeholder="🔍 Tìm truyện..." autocomplete="off" />
@@ -92,6 +104,6 @@
   </div>
   <audio id="audio" preload="none"></audio>
 
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 </html>

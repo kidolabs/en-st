@@ -308,8 +308,28 @@ function route() {
   else renderPlayer(decodeURIComponent(slug), Number(idx || 0));
 }
 
+// ---------- access gate (casual privacy) ----------
+const GATE_CODE = '160925';
+function setupGate() {
+  const gate = $('#gate');
+  if (localStorage.getItem('es_gate') === 'ok') { gate.hidden = true; return; }
+  $('#gate-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if ($('#gate-input').value.trim() === GATE_CODE) {
+      localStorage.setItem('es_gate', 'ok');
+      gate.hidden = true;
+    } else {
+      $('#gate-err').hidden = false;
+      $('#gate-input').value = '';
+      $('#gate-input').focus();
+    }
+  });
+  setTimeout(() => $('#gate-input').focus(), 50);
+}
+
 // ---------- init ----------
 function init() {
+  setupGate();
   $('#search').addEventListener('input', (e) => { state.q = e.target.value; renderHome(); });
   $('#ep-search').addEventListener('input', (e) => renderEpisodes(e.target.value));
   $('#back-home').addEventListener('click', () => { location.hash = '#/'; });
