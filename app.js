@@ -435,7 +435,8 @@ function init() {
     .then((r) => r.json())
     .then((c) => {
       CATALOG = c.topics;
-      BY_SLUG = Object.fromEntries(CATALOG.map((t) => [t.slug, t]));
+      BY_SLUG = {};                                  // Safari 11 (macOS 10.13) has no Object.fromEntries
+      CATALOG.forEach((t) => { BY_SLUG[t.slug] = t; });
       renderLevels();
       route();
     })
