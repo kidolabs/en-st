@@ -94,11 +94,11 @@ for(const t of TRACKS){
   card.dataset.s = norm(t.t) + ' ' + numStr + ' ' + t.n;
   card.innerHTML =
     '<div class="thumb">'
-    + '<div class="num">'+t.n+'</div>'
+    + '<div class="num">'+numStr+'</div>'
     + (t.img
         ? '<img loading="lazy" src="'+t.img+'" alt="" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.fallback\').style.display=\'flex\'">'
         : '')
-    + '<div class="fallback"'+(t.img?'':' style="display:flex"')+'>'+t.n+'</div>'
+    + '<div class="fallback"'+(t.img?'':' style="display:flex"')+'>'+numStr+'</div>'
     + '</div>'
     + '<div class="name">'+t.t.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div>';
   frag.appendChild(card);
